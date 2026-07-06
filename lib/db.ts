@@ -204,9 +204,13 @@ const supa = {
   },
 };
 
-// ============ 로컬 JSON 구현 ============
+// ============ 로컬 JSON 구현 (개발 환경 전용) ============
 
 async function localDB() {
+  // Vercel 서버리스 환경에서는 fs 쓰기 불가 → Supabase 필수
+  if (process.env.VERCEL) {
+    throw new Error('Local DB is not available on Vercel. Set NEXT_PUBLIC_SUPABASE_URL.');
+  }
   return await import('@/lib/local-db');
 }
 
