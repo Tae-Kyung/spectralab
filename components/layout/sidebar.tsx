@@ -9,6 +9,7 @@ import {
   FolderSearch,
   FlaskConical,
   GitCompareArrows,
+  BookOpen,
   Atom,
   ChevronLeft,
   ChevronRight,
@@ -21,6 +22,7 @@ const navItems = [
   { href: '/upload', label: '데이터 업로드', icon: Upload },
   { href: '/explorer', label: '데이터 탐색', icon: FolderSearch },
   { href: '/compare', label: '비교 뷰', icon: GitCompareArrows },
+  { href: '/tutorial', label: '튜토리얼', icon: BookOpen },
 ];
 
 export function Sidebar() {
