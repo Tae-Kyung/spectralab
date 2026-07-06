@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { Upload, FlaskConical, Database, BarChart3 } from 'lucide-react';
+import { Upload, FlaskConical, Database, BarChart3, Trash2 } from 'lucide-react';
 
 interface Stats {
   totalDatasets: number;
@@ -18,12 +18,22 @@ interface Stats {
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
 
-  useEffect(() => {
+  const fetchStats = () => {
     fetch('/api/data/stats')
       .then(r => r.json())
       .then(r => setStats(r.data))
       .catch(() => {});
-  }, []);
+  };
+
+  useEffect(() => { fetchStats(); }, []);
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm('이 데이터셋과 모든 스펙트럼을 삭제하시겠습니까?')) return;
+    await fetch(`/api/data/datasets?id=${id}`, { method: 'DELETE' });
+    fetchStats();
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -90,6 +100,12 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">{d.technique}</Badge>
                     <Badge variant="outline">{d.count}개 스펙트럼</Badge>
+                    <button
+                      onClick={(e) => handleDelete(d.id, e)}
+                      className="p-1 rounded hover:bg-destructive/20 transition-colors"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </button>
                   </div>
                 </div>
               </Link>
