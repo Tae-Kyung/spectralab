@@ -154,13 +154,15 @@ export default function WorkbenchPage() {
         const result = fitPeaks(x, dataY, initialPeaks, fitModel);
         results.set(s.id, result);
 
-        // Propagate: use fitted peaks as next initial
+        // Propagate: use fitted peaks as next initial (including wL/wG for Voigt)
         prevPeaks = result.peaks.map((p, i) => ({
           index: initialPeaks[i]?.index || 0,
           center: p.center,
           height: p.height,
           fwhm: p.fwhm,
           area: p.area,
+          wL: p.wL,
+          wG: p.wG,
         }));
       }
       setFitResults(results);
@@ -262,12 +264,20 @@ export default function WorkbenchPage() {
   // Export CSV
   const handleExportCSV = () => {
     if (fitResults.size === 0) return;
-    const lines = ['Spectrum,Peak,Center(cm-1),Height,FWHM,Area,R2'];
+    const isVoigtExport = fitModel === 'voigt';
+    const header = isVoigtExport
+      ? 'Spectrum,Peak,Center(cm-1),Height,wL(cm-1),wG(cm-1),FWHM_Voigt,Area,R2'
+      : 'Spectrum,Peak,Center(cm-1),Height,FWHM,Area,R2';
+    const lines = [header];
     for (const s of selectedSpectra) {
       const fr = fitResults.get(s.id);
       if (!fr) continue;
       fr.peaks.forEach((p, i) => {
-        lines.push(`"${s.label}",${i + 1},${p.center.toFixed(2)},${p.height.toFixed(1)},${p.fwhm.toFixed(2)},${p.area.toFixed(1)},${fr.rSquared.toFixed(4)}`);
+        if (isVoigtExport) {
+          lines.push(`"${s.label}",${i + 1},${p.center.toFixed(2)},${p.height.toFixed(1)},${p.wL?.toFixed(2) ?? ''},${p.wG?.toFixed(2) ?? ''},${p.fwhm.toFixed(2)},${p.area.toFixed(1)},${fr.rSquared.toFixed(4)}`);
+        } else {
+          lines.push(`"${s.label}",${i + 1},${p.center.toFixed(2)},${p.height.toFixed(1)},${p.fwhm.toFixed(2)},${p.area.toFixed(1)},${fr.rSquared.toFixed(4)}`);
+        }
       });
     }
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
@@ -374,7 +384,15 @@ export default function WorkbenchPage() {
                     <th className="text-left p-2">피크</th>
                     <th className="text-right p-2">Center (cm⁻¹)</th>
                     <th className="text-right p-2">Height</th>
-                    <th className="text-right p-2">FWHM</th>
+                    {fitModel === 'voigt' ? (
+                      <>
+                        <th className="text-right p-2">wL (cm⁻¹)</th>
+                        <th className="text-right p-2">wG (cm⁻¹)</th>
+                      </>
+                    ) : (
+                      <th className="text-right p-2">FWHM</th>
+                    )}
+                    <th className="text-right p-2">FWHM(V)</th>
                     <th className="text-right p-2">Area</th>
                     <th className="text-right p-2">R²</th>
                   </tr>
@@ -389,6 +407,14 @@ export default function WorkbenchPage() {
                         <td className="p-2">{pi + 1}</td>
                         <td className="p-2 text-right font-mono">{p.center.toFixed(2)}</td>
                         <td className="p-2 text-right font-mono">{p.height.toFixed(0)}</td>
+                        {fitModel === 'voigt' ? (
+                          <>
+                            <td className="p-2 text-right font-mono">{p.wL?.toFixed(2) ?? '-'}</td>
+                            <td className="p-2 text-right font-mono">{p.wG?.toFixed(2) ?? '-'}</td>
+                          </>
+                        ) : (
+                          <td className="p-2 text-right font-mono">{p.fwhm.toFixed(2)}</td>
+                        )}
                         <td className="p-2 text-right font-mono">{p.fwhm.toFixed(2)}</td>
                         <td className="p-2 text-right font-mono">{p.area.toFixed(0)}</td>
                         {pi === 0 && <td className="p-2 text-right font-mono" rowSpan={fr.peaks.length}>{fr.rSquared.toFixed(4)}</td>}
