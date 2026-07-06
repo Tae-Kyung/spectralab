@@ -1,65 +1,111 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
+import { Upload, FlaskConical, Database, BarChart3 } from 'lucide-react';
+
+interface Stats {
+  totalDatasets: number;
+  totalSpectra: number;
+  totalFittings: number;
+  byResearcher: Record<string, number>;
+  spectraByDataset: Array<{ id: string; name: string; researcher: string; technique: string; material: string | null; count: number }>;
+}
+
+export default function DashboardPage() {
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  useEffect(() => {
+    fetch('/api/data/stats')
+      .then(r => r.json())
+      .then(r => setStats(r.data))
+      .catch(() => {});
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">SpectraLab</h1>
+        <p className="text-muted-foreground">Magneto-Raman Spectroscopy Analysis Platform</p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <Database className="h-8 w-8 text-cyan-400" />
+            <div>
+              <p className="text-2xl font-bold">{stats?.totalDatasets || 0}</p>
+              <p className="text-sm text-muted-foreground">데이터셋</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <BarChart3 className="h-8 w-8 text-green-400" />
+            <div>
+              <p className="text-2xl font-bold">{stats?.totalSpectra || 0}</p>
+              <p className="text-sm text-muted-foreground">스펙트럼</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <FlaskConical className="h-8 w-8 text-purple-400" />
+            <div>
+              <p className="text-2xl font-bold">{stats?.totalFittings || 0}</p>
+              <p className="text-sm text-muted-foreground">피팅 결과</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="flex gap-3">
+        <Link href="/upload">
+          <Button variant="outline"><Upload className="mr-2 h-4 w-4" />데이터 업로드</Button>
+        </Link>
+        <Link href="/explorer">
+          <Button variant="outline"><FlaskConical className="mr-2 h-4 w-4" />데이터 탐색</Button>
+        </Link>
+      </div>
+
+      {/* Datasets List */}
+      {stats && stats.spectraByDataset.length > 0 && (
+        <Card className="p-4">
+          <h2 className="text-lg font-semibold mb-3">데이터셋 목록</h2>
+          <div className="space-y-2">
+            {stats.spectraByDataset.map(d => (
+              <Link key={d.id} href={`/workbench/${d.id}`} className="block">
+                <div className="flex items-center justify-between p-3 rounded-md hover:bg-accent transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <p className="font-medium text-sm">{d.name}</p>
+                      <p className="text-xs text-muted-foreground">{d.researcher} / {d.material}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{d.technique}</Badge>
+                    <Badge variant="outline">{d.count}개 스펙트럼</Badge>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {stats && stats.totalDatasets === 0 && (
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground mb-4">아직 업로드된 데이터가 없습니다.</p>
+          <Link href="/upload">
+            <Button><Upload className="mr-2 h-4 w-4" />데이터 업로드하기</Button>
+          </Link>
+        </Card>
+      )}
     </div>
   );
 }
