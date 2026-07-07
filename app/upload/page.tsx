@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, FileSpreadsheet, Check, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, FileSpreadsheet, Check, Loader2, AlertCircle, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 // Compact format from parse API (xData at sheet level)
@@ -162,6 +162,14 @@ export default function UploadPage() {
       <div>
         <h1 className="text-2xl font-bold">데이터 업로드</h1>
         <p className="text-muted-foreground">Excel 파일을 업로드하면 자동으로 스펙트럼을 파싱합니다</p>
+        <a
+          href="/sample-raman-data-yig-film.xlsx"
+          download="Raman Data (YIG Film).xlsx"
+          className="inline-flex items-center gap-1.5 mt-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+        >
+          <Download className="h-4 w-4" />
+          샘플 데이터 다운로드 (YIG Film Raman)
+        </a>
       </div>
 
       {error && (
